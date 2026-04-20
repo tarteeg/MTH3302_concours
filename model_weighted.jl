@@ -346,7 +346,7 @@ test.PM_roll3 = zeros(Float64, nrow(test))
 test.PM_pos   = zeros(Float64, nrow(test))
 
 println("\n=== 6. Prédiction récursive 2025 ===")
-preds_2025 = recursive_predict_glm(model_final, test, train_final, median(train_final.PM_pos))
+preds_2025 = recursive_predict_glm(model_final, test, train, median(train_final.PM_pos))
 output = DataFrame(
     ID = [(test.Date[i], test.stationId[i]) for i in 1:nrow(test)],
     PM = preds_2025)
