@@ -227,18 +227,24 @@ COLS_ALL = [:PM, :is_fumee, :PM_lag1, :PM_roll3, :NO2_roll3,
 # -----------------------------------------------------------------------------
 """
     fit_gating(train_data) → (clf, glm_normal, glm_fumee)
+
+Gating + over-sampling ×3 des jours fumée (variante C validée par
+model_comparison.jl : meilleur RMSE fumée sur CV 2023 = 72.24).
+
+- Classifieur : GLM logistique pondéré (wts ×3 sur fumée)
+- GLM normal  : Gaussian(LogLink) sur tout le train (poids uniformes)
+- GLM fumée   : Gaussian(LogLink) sur tout le train avec wts ×3 sur fumée
 """
 function fit_gating(train_data::DataFrame)
     td = dropmissing(train_data, COLS_ALL)
-    clf = glm(formula_clf, td, Binomial(), LogitLink())
+    td.wt_fumee = ifelse.(td.is_fumee, 3.0, 1.0)
+    td.wt_fumee .*= nrow(td) / sum(td.wt_fumee)
 
-    td_normal = filter(r -> !r.is_fumee, td)
-    td_fumee  = filter(r ->  r.is_fumee, td)
-    println("  Fit GLM normal : n=$(nrow(td_normal))")
-    println("  Fit GLM fumée  : n=$(nrow(td_fumee))")
+    println("  Fit gating : n=$(nrow(td)) | n_fumée=$(sum(td.is_fumee)) ($(round(100*sum(td.is_fumee)/nrow(td), digits=1))%)")
 
-    glm_normal = lm(formula_glm_normal, td_normal)
-    glm_fumee  = lm(formula_glm_fumee,  td_fumee)
+    clf        = glm(formula_clf,        td, Binomial(), LogitLink(); wts=td.wt_fumee)
+    glm_normal = glm(formula_glm_normal, td, Normal(),   LogLink())
+    glm_fumee  = glm(formula_glm_fumee,  td, Normal(),   LogLink();   wts=td.wt_fumee)
     (clf, glm_normal, glm_fumee)
 end
 
