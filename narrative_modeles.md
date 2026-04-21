@@ -11,6 +11,7 @@ Quatre approches ont été retenues, correspondant à **quatre hypothèses ortho
 - **Holdouts** : CV 2024 (année calme, peu de fumée) et CV 2023 (année feux, RMSE dominé par les pics).
 - **Prédiction** récursive identique (amorçage via historique complet `train`, clamp [0, 150]).
 
+
 ### 4.1 Approche A — Pondération temporelle (decay 3 ans)
 
 **Hypothèse** : depuis 2007, la pollution de fond de Montréal a diminué (normes véhicules, électrification chauffage). Les années récentes sont plus représentatives de 2025. On pondère chaque observation par `exp(-(2024 - année) / 3)`.
